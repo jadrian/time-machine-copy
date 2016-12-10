@@ -40,10 +40,6 @@ def main():
     'dst',
     help = 'destination for copy')
   parser.add_argument(
-    '-f', '--force',
-    action = 'store_true',
-    help = 'run even if "src" looks like a Time Machine root dir')
-  parser.add_argument(
     '-D', metavar = 'inodes_dir',
     help = 'path to Time Machine fake inode directory')
   
@@ -134,13 +130,6 @@ def tutorial(progname):
             └╴U2
               ├╴bloody_sunday.mp3
               └╴with_or_without_you.mp3
-    
-    {0} tmbackup rescue
-      This command will fail, because tmcp is not designed to duplicate an
-      entire Time Machine backup, but instead only files from a single snapshot
-      in time.  If you'd like to try anyway, you can use...
-    {0} --force tmbackup rescue
-      ... which will probably crash or go into an infinite loop or something.
     """).format(progname)
 
 if __name__ == '__main__':
