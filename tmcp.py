@@ -12,6 +12,16 @@ Please submit patches to https://github.com/jadrian/time-machine-copy
 from __future__ import print_function
 
 def tmcp(src, dst, archive=None):
+  """Copy one or more sources from a Time Machine directory into a destination.
+  
+  Arguments:
+  - src (list of strings)
+  - dst (string)
+  - archive (string)
+  
+  All three arguments are paths.  If dst does not exist, it is created as a
+  directory.  If archive is None, it is auto-detected from src.
+  """
   print(src)
   print(dst)
   print(archive)
