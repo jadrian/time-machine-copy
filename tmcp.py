@@ -27,7 +27,7 @@ def tmcp(src, dst, archive=None):
   as a directory.  If archive is None, it is auto-detected from src.
   """
   if archive is None:
-    archive = findArchive(src)
+    archive = _findArchive(src)
   
   # Create dst if necessary.
   try:
@@ -47,10 +47,10 @@ def _copy(src, dst, archive):
   """Copies file or directory "src" to existing directory "dst"."""
   pass
 
-def findArchive(src):
+def _findArchive(src):
   return None
 
-def cliMain():
+def _cliMain():
   """Parses command-line arguments and passes them into tmcp()."""
   import argparse, sys
   
@@ -84,7 +84,7 @@ def cliMain():
     sys.exit(1)
   if do_print_tutorial:
     parser.print_help()
-    print(tutorial(sys.argv[0]), file=sys.stderr)
+    print(_tutorial(sys.argv[0]), file=sys.stderr)
     sys.exit(0)
   
   # Parse args and call the real function.
@@ -95,7 +95,7 @@ def cliMain():
     print('{0}: {1}'.format(type(exc).__name__, exc), file=sys.stderr)
     sys.exit(1)
 
-def tutorial(progname):
+def _tutorial(progname):
   import textwrap
   return textwrap.dedent("""
     If any "src" argument is a directory, the script recurses within that
@@ -172,4 +172,4 @@ def tutorial(progname):
     """).format(progname)
 
 if __name__ == '__main__':
-  cliMain()
+  _cliMain()
