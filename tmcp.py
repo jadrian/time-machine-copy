@@ -13,6 +13,8 @@ from __future__ import print_function
 import errno
 import os
 import os.path
+import shutil
+import sys
 
 def tmcp(src, dst, archive=None):
   """Copies sources from a Time Machine directory into a destination.
@@ -26,8 +28,15 @@ def tmcp(src, dst, archive=None):
   must be an existing file or directory.  If dst does not exist, it is created
   as a directory.  If archive is None, it is auto-detected from src.
   """
+  # Ignore slashes and convert all arguments to absolute paths.
+  src = [os.path.realpath(f) for f in src]
+  dst = os.path.realpath(dst)
+  
+  # Find the archive directory.
   if archive is None:
     archive = _findArchive(src)
+  elif not _isArchiveDir(archive):
+    raise OSError('{0} is not an archive directory.'.format(archive))
   
   # Create dst if necessary.
   try:
@@ -44,15 +53,37 @@ def tmcp(src, dst, archive=None):
     _copy(f, dst, archive)
 
 def _copy(src, dst, archive):
-  """Copies file or directory "src" to existing directory "dst"."""
-  pass
+  """Copies a single file or directory "src" into existing directory "dst"."""
+  real_src = getOriginal(src, archive)
+  if real_src is None:
+    return
+  
+  copy_name = os.path.join(dst, os.path.basename(src))
+  
+  if os.path.isfile(real_src):
+    shutil.copy2(real_src, copy_name)
+  elif os.path.isdir(real_src):
+    os.mkdir(copy_name)
+    contents = os.listdir(real_src)
+    for child in contents:
+      _copy(os.path.join(real_src, child), copy_name, archive)
+    shutil.copystat(real_src, copy_name)
+
+def getOriginal(src, archive):
+  if not os.path.exists(src):
+    print('Path {0} does not exist.'.format(src), file=sys.stderr)
+    return None
+  return src
+
+def _isArchiveDir(arch):
+  return True
 
 def _findArchive(src):
   return None
 
 def _cliMain():
   """Parses command-line arguments and passes them into tmcp()."""
-  import argparse, sys
+  import argparse
   
   # Check for the -H flag before parsing other arguments.
   prelim_parser = argparse.ArgumentParser(add_help=False)
