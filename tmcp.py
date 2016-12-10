@@ -27,6 +27,15 @@ def tmcp(src, dst, archive=None):
   Everything's a path: dst, archive, and all elements of src.  Each src path
   must be an existing file or directory.  If dst does not exist, it is created
   as a directory.  If archive is None, it is auto-detected from src.
+  
+  This function ignores conflicts with existing files --- it only ever creates
+  brand new files or directories, never deleting, overwriting, or changing the
+  metadata of existing files or directories.  So:
+  - If tmcp attempts to copy a file to a location that already exists, the file
+    is skipped, even if the contents differ.
+  - If tmcp attempts to copy a directory to a location that already exists, the 
+    metadata for the destination will remain unchanged, and the copying process
+    will proceed recursively within it.
   """
   # Ignore slashes and convert all arguments to absolute paths.
   src = [os.path.realpath(f) for f in src]
@@ -41,7 +50,7 @@ def tmcp(src, dst, archive=None):
   # Create dst if necessary.
   try:
     os.makedirs(dst)
-  except OSError as exc:  # Python >2.5
+  except OSError as exc:
     if exc.errno == errno.EEXIST and os.path.isdir(dst):
       pass  # Directory already exists.
     else:
@@ -57,21 +66,29 @@ def _copy(src, dst, archive):
   real_src = getOriginal(src, archive)
   if real_src is None:
     return
-  
   copy_name = os.path.join(dst, os.path.basename(src))
   
   if os.path.isfile(real_src):
-    shutil.copy2(real_src, copy_name)
+    if os.path.isfile(copy_name):
+      print('x {0} :: Destination file already exists.'.format(copy_name))
+    else:
+      shutil.copy2(real_src, copy_name)
   elif os.path.isdir(real_src):
-    os.mkdir(copy_name)
+    did_make_new_dir = False
+    if os.path.isdir(copy_name):
+      print('x {0} :: Destination dir already exists.'.format(copy_name))
+    else:
+      os.mkdir(copy_name)
+      did_make_new_dir = True
     contents = os.listdir(real_src)
     for child in contents:
       _copy(os.path.join(real_src, child), copy_name, archive)
-    shutil.copystat(real_src, copy_name)
+    if did_make_new_dir:
+      shutil.copystat(real_src, copy_name)
 
 def getOriginal(src, archive):
   if not os.path.exists(src):
-    print('Path {0} does not exist.'.format(src), file=sys.stderr)
+    print('x {0} :: Source path does not exist.'.format(src))
     return None
   return src
 
@@ -177,7 +194,7 @@ def _tutorial(progname):
       .
       ├╴tmbackup      (unchanged)
       ├╴rescue        (unchanged; empty)
-      └╴Music
+      └╴Music         (newly-created dir within .)
         ├╴Nirvana
         │ ├╴in_bloom.mp3
         │ └╴teen_spirit.mp3
@@ -200,6 +217,24 @@ def _tutorial(progname):
             └╴U2
               ├╴bloody_sunday.mp3
               └╴with_or_without_you.mp3
+    
+    Do *not* call this script on the Time Machine directory itself.  It will
+    probably crash or run out of disk space at the destination, since it makes
+    full copies of every file it finds (no hardlinks).  Even worse, since the
+    fake inode directory (".HFS+ Private Directory Data?") lives inside the root
+    Time Machine directory, the recursive copy will also copy over the entire
+    massive fake inode directory, which is a waste of space.  (You'd be better
+    off just using rsync if you want a copy of the fake inode directory.)
+    
+    Though it's recommended to always copy into a new or empty directory, this
+    script ignores conflicts with existing files --- it only ever creates brand
+    new files or directories, never deleting, overwriting, or changing the
+    metadata of existing files or directories.  So:
+    - If tmcp attempts to copy a file to a location that already exists, the
+      file is skipped, even if the contents differ.
+    - If tmcp attempts to copy a directory to a location that already exists,
+      the metadata for the destination will remain unchanged, and the copying
+      process will proceed recursively within it.
     """).format(progname)
 
 if __name__ == '__main__':
