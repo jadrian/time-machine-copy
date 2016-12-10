@@ -89,7 +89,11 @@ def cliMain():
   
   # Parse args and call the real function.
   args = parser.parse_args()
-  tmcp(args.src, args.dst, args.D)
+  try:
+    tmcp(args.src, args.dst, args.D)
+  except BaseException as exc:
+    print('{0}: {1}'.format(type(exc).__name__, exc), file=sys.stderr)
+    sys.exit(1)
 
 def tutorial(progname):
   import textwrap
