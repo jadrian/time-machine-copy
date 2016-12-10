@@ -10,23 +10,48 @@ Please submit patches to https://github.com/jadrian/time-machine-copy
 """
 
 from __future__ import print_function
+import errno
+import os
+import os.path
 
 def tmcp(src, dst, archive=None):
-  """Copy one or more sources from a Time Machine directory into a destination.
+  """Copies sources from a Time Machine directory into a destination.
   
   Arguments:
   - src (list of strings)
   - dst (string)
   - archive (string)
   
-  All three arguments are paths.  If dst does not exist, it is created as a
-  directory.  If archive is None, it is auto-detected from src.
+  Everything's a path: dst, archive, and all elements of src.  Each src path
+  must be an existing file or directory.  If dst does not exist, it is created
+  as a directory.  If archive is None, it is auto-detected from src.
   """
-  print(src)
-  print(dst)
-  print(archive)
+  if archive is None:
+    archive = findArchive(src)
+  
+  # Create dst if necessary.
+  try:
+    os.makedirs(dst)
+  except OSError as exc:  # Python >2.5
+    if exc.errno == errno.EEXIST and os.path.isdir(dst):
+      pass  # Directory already exists.
+    else:
+      raise OSError(
+        'Some portion of destination path {0} is an existing file.'.format(dst))
+  
+  # Make recursive copies for each src.
+  for f in src:
+    _copy(f, dst, archive)
+
+def _copy(src, dst, archive):
+  """Copies file or directory "src" to existing directory "dst"."""
+  pass
+
+def findArchive(src):
+  return None
 
 def cliMain():
+  """Parses command-line arguments and passes them into tmcp()."""
   import argparse, sys
   
   # Check for the -H flag before parsing other arguments.
