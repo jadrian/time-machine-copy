@@ -5,6 +5,8 @@
 tmcp --- Copy files/directories from a Time Machine backup
 
 Written 2016-12-10 by Jadrian Miles (jadrian.org)
+
+Please submit patches to https://github.com/jadrian/time-machine-copy
 """
 
 from __future__ import print_function
