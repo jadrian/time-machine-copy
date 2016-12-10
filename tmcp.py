@@ -26,7 +26,7 @@ def tmcp(src, dst, archive=None):
   print(dst)
   print(archive)
 
-def main():
+def cliMain():
   import argparse, sys
   
   # Check for the -H flag before parsing other arguments.
@@ -143,4 +143,4 @@ def tutorial(progname):
     """).format(progname)
 
 if __name__ == '__main__':
-  main()
+  cliMain()
