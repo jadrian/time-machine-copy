@@ -49,7 +49,7 @@ def main():
     sys.exit(1)
   if do_print_tutorial:
     parser.print_help()
-    sys.stderr.write(tutorial(sys.argv[0]))
+    print(tutorial(sys.argv[0]), file=sys.stderr)
     sys.exit(0)
   
   # Parse args and call the real function.
